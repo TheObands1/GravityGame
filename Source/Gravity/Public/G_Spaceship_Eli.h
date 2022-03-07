@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UStaticMeshComponent;
 class UPawnMovementComponent;
 class UFloatingPawnMovement;
+class AG_Planet;
 
 UCLASS()
 class GRAVITY_API AG_Spaceship_Eli : public APawn
@@ -32,20 +33,25 @@ protected:
 	UFloatingPawnMovement* SpaceshipPawnMovementComponent;
 
 
-public:
 
-
+protected:
 	//variables
+	UPROPERTY(EditDefaultsOnly, Category = "Debug")
+	bool bIsDebugging;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	bool bIsBeingAffectedByGravity;
 
-protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float ShipRotatingSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float ShipFowardSpeed;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Movement")
+	float CurrentRotationRate;
+
+	AG_Planet* CurrentPlanetToRotateReference;
 
 protected:
 
@@ -54,11 +60,19 @@ protected:
 	void MoveRight(float AxisValue);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void BP_Test(float AxisValue);
+	void BP_Test(AG_Planet* PlanetToRotate, float DeltaTime);
 
 public:
 	// Sets default values for this pawn's properties
 	AG_Spaceship_Eli();
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsBeingAffectedByGravity(bool NewState) { bIsBeingAffectedByGravity = NewState; };
+
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentPlanetReference(AG_Planet* NewPlanetReference) { CurrentPlanetToRotateReference = NewPlanetReference; };
+
+	void RotateAroundPlanet(AG_Planet* PlanetToRotate, float DeltaTime);
 
 protected:
 	// Called when the game starts or when spawned

@@ -8,6 +8,10 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Math/UnrealMathUtility.h"
+#include "G_Planet.h"
+#include "Math/Vector.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -35,6 +39,7 @@ AG_Spaceship_Eli::AG_Spaceship_Eli()
 	bIsBeingAffectedByGravity = false;
 	ShipRotatingSpeed = 10;
 	ShipFowardSpeed = 0.5;
+	CurrentRotationRate = 0.0f;
 
 }
 
@@ -65,7 +70,45 @@ void AG_Spaceship_Eli::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	MoveFoward(ShipFowardSpeed);
+	if (!bIsBeingAffectedByGravity)
+	{
+		//MoveFoward(ShipFowardSpeed);
+	}
+	else
+	{
+		if (IsValid(CurrentPlanetToRotateReference))
+		{
+			SpaceshipPawnMovementComponent->StopMovementImmediately();
+			RotateAroundPlanet(CurrentPlanetToRotateReference, DeltaTime);
+		}
+	}
+	
+}
+
+void AG_Spaceship_Eli::RotateAroundPlanet(AG_Planet* PlanetToRotate, float DeltaTime)
+{
+	bIsBeingAffectedByGravity = true;
+	BP_Test(PlanetToRotate, DeltaTime);
+
+	/*
+	CurrentRotationRate += DeltaTime*PlanetToRotate->GetRotationSpeed();
+	FVector VectorToRotate = FVector(PlanetToRotate->GetGravityRadius(), 0, 0);
+
+	FVector NewPosition = UKismetMathLibrary::RotateAngleAxis(VectorToRotate, (PlanetToRotate->GetAngleOfRotation() * CurrentRotationRate), FVector(0, 0, 1));
+
+	FVector FinalPosition = GetActorLocation() + NewPosition;
+
+	this->SetActorLocation(FinalPosition
+
+	//PROBLEMA IDENTIFICADO: La posición de la nave al empezar a girar DEPENDE del ángulo inicial que yo le ponga al planeta
+	//CORRECCIÓN QUE DEBO HACER: Calcular ese angúlo dependiendo de donde la nave entra 
+
+	*/
+
+	if (bIsDebugging)
+	{
+		DrawDebugLine(GetWorld(), GetActorLocation(), PlanetToRotate->GetActorLocation(), FColor::Cyan, false, 1.0f, 1.0f, 1.0f);
+	}
 }
 
 // Called to bind functionality to input
@@ -75,7 +118,7 @@ void AG_Spaceship_Eli::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &AG_Spaceship_Eli::MoveRight);
 
-	//PlayerInputComponent->BindAxis("MoveFoward", this, AG_Spaceship_Eli::MoveFoward);
+	PlayerInputComponent->BindAxis("MoveFoward", this, &AG_Spaceship_Eli::MoveFoward);
 
 }
 
